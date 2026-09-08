@@ -1,2 +1,2 @@
-# golbet_dise-osoftware_l
+# golbet_diseñosoftware_l
 Aplicacion Golbet de diseño de software
