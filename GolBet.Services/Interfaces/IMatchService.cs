@@ -13,7 +13,10 @@ public interface IMatchService
 
     Task<MatchDetailDto?> GetDetailAsync(int id);
 
-    // GolBet.Services/Interfaces/IMatchService.cs  (agregar)
+    Task StartMatchAsync(int id);
+
+    Task<ResolutionSummaryDto> CloseMatchAsync(MatchResultFormDto dto);
+
     Task<MatchFormDto?> GetForEditAsync(int id);
 
     Task CreateAsync(MatchFormDto dto);
