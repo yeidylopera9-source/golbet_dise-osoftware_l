@@ -1,11 +1,11 @@
 ﻿using GolBet.Entities;
 using GolBet.Entities.Common;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace GolBet.Repositories.Data
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext : IdentityDbContext<AppUser>
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -19,9 +19,9 @@ namespace GolBet.Repositories.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
+            base.OnModelCreating(modelBuilder);   // FIRST: Identity maps its 6 tables here
 
-            // Team names must be unique (case- and accent-insensitive) Aqui el nombre no se repite.
+            // Team names must be unique (case- and accent-insensitive)
             modelBuilder.Entity<Team>()
                 .Property(t => t.Name)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AI"); //Esta parte me indica el Sensitive Case
@@ -48,6 +48,25 @@ namespace GolBet.Repositories.Data
                 .HasOne(b => b.Match)
                 .WithMany(m => m.Bets)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // ---- Identity additions ----
+
+            // Bet -> User: a user's bets cannot be destroyed by deleting the user
+            modelBuilder.Entity<Bet>()
+                .HasOne(b => b.User)
+                .WithMany(u => u.Bets)
+                .HasForeignKey(b => b.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Business rule #3: same user cannot repeat the same pick on a match
+            modelBuilder.Entity<Bet>()
+                .HasIndex(b => new { b.MatchId, b.UserId, b.Pick })
+                .IsUnique();
+
+            // FutCoins balance precision (up to 9,999,999,999.99)
+            modelBuilder.Entity<AppUser>()
+                .Property(u => u.Balance)
+                .HasPrecision(12, 2);
         }
 
         // ---- Automatic audit timestamps ----
