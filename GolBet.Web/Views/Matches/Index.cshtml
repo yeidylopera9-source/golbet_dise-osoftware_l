@@ -3,6 +3,101 @@
 @using GolBet.Web.Helpers
 @model IEnumerable<GolBet.Services.DTOs.MatchDto>
 @{
+    ViewData["Title"] = "Cartelera de Partidos";
+    var currentStatus = ViewBag.CurrentStatus as MatchStatus?;
+    var currentSearch = ViewBag.CurrentSearch as string;
+}
+
+<div class="container my-4">
+    <h2 class="mb-4">Cartelera de Partidos</h2>
+
+    <!-- BARRA DE BÚSQUEDA Y FILTROS -->
+    <div class="row mb-4 align-items-center">
+        <!-- Formulario de Búsqueda (GET) -->
+        <div class="col-md-6 mb-3 mb-md-0">
+            <form method="get" asp-action="Index" class="d-flex gap-2">
+                <!-- Mantiene el filtro de estado activo si existe -->
+                @if (currentStatus.HasValue)
+                {
+                    <input type="hidden" name="status" value="@currentStatus.Value" />
+                }
+
+                <!-- Campo de Texto de Búsqueda -->
+
+                <input type="text"
+                       name="search"
+                       class="form-control"
+                       placeholder="Buscar por equipo (ej. Nacional)..."
+                       value="@currentSearch" />
+
+                <!-- Botón Buscar -->
+                <button class="btn btn-primary" type="submit">Buscar</button>
+
+                @if (!string.IsNullOrWhiteSpace(currentSearch) || currentStatus.HasValue)
+                {
+                    <a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+                }
+            </form>
+        </div>
+
+        <!-- Botones de Filtro de Estado -->
+        <div class="col-md-6 text-md-end">
+            <div class="btn-group" role="group">
+                <a asp-action="Index"
+                   asp-route-search="@currentSearch"
+                   class="btn @(!currentStatus.HasValue ? "btn-dark" : "btn-outline-dark")">
+                    Todos
+                </a>
+                <a asp-action="Index"
+                   asp-route-status="@MatchStatus.Scheduled"
+                   asp-route-search="@currentSearch"
+                   class="btn @(currentStatus == MatchStatus.Scheduled ? "btn-dark" : "btn-outline-dark")">
+                    Programados
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOS MUESTRA PARTIDOS O MENSAJE SIN RESULTADOS -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+            @foreach (var match in Model)
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">@match.HomeTeamName vs @match.AwayTeamName</h5>
+                            <p class="card-text text-muted">Fecha: @match.Date.ToString("dd/MM/yyyy HH:mm")</p>
+                            <span class="badge bg-secondary">@match.Status</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <!-- Mensaje amable si no hay partidos -->
+        <div class="alert alert-warning text-center my-4 p-4" role="alert">
+            <h4 class="alert-heading">No se encontraron partidos</h4>
+            <p>
+                @if (!string.IsNullOrWhiteSpace(currentSearch))
+                {
+                    @:No hay partidos para "<strong>@currentSearch</strong>".
+                }
+                else
+                {
+                    @:No hay partidos disponibles en este momento.
+                }
+            </p>
+            <hr />
+            <a asp-action="Index" class="btn btn-primary mt-2">Volver a la cartelera de partidos</a>
+        </div>
+    }
+</div>
+
+@{
     ViewData["Title"] = "Partidos";
 }
 @{
@@ -36,7 +131,7 @@
 </div>
 
 <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
-    @foreach (var match in Model)
+    @foreach (var match in Model!)
     {
         <div class="col">
             <div class="card h-100 shadow-sm">

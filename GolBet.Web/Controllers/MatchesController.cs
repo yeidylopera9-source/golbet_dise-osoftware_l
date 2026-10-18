@@ -22,11 +22,18 @@ public class MatchesController : Controller
 
     // GET /Matches            -> all matches
     // GET /Matches?status=Scheduled -> filtered board
-    public async Task<IActionResult> Index(MatchStatus? status)
+
+    //actualizamos para agregar el parámetro search
+    [HttpGet]
+    public async Task<IActionResult> Index(MatchStatus? status, string? search)
     {
+        var matches = await _matchService.GetAllWithTeamsAsync(status, search);
+
+        // Conservar estado y búsqueda para la vista (Patrón ViewBag)
         ViewBag.CurrentStatus = status;
-        var board = await _matchService.GetBoardAsync(status);
-        return View(board);
+        ViewBag.CurrentSearch = search;
+
+        return View(matches);
     }
 
     // GET /Matches/Detail/3

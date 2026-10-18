@@ -13,19 +13,30 @@ public class MatchRepository : GenericRepository<Match>, IMatchRepository
     {
     }
 
-    public async Task<IEnumerable<Match>> GetAllWithTeamsAsync(MatchStatus? status = null)
+    public async Task<IEnumerable<Match>> GetAllWithTeamsAsync(MatchStatus? status = null, string? searchTerm = null)// agregamos un parámetro searchTerm para filtrar por nombre de equipo
     {
-        var query = _dbSet
-            .Include(m => m.HomeTeam) // es un jOIN en SQL para traer los datos de la tabla HomeTeam
+        var query = _context.Matches
+            .Include(m => m.HomeTeam)
             .Include(m => m.AwayTeam)
             .Where(m => m.IsActive)
             .AsNoTracking()
-            .AsQueryable(); // EL AsQueryable() es para que se pueda seguir agregando filtros a la consulta
+            .AsQueryable();
 
+        // Filtro por estado existente (Módulo 5)
         if (status.HasValue)
             query = query.Where(m => m.Status == status.Value);
 
-        return await query.OrderBy(m => m.Date).ToListAsync();
+        ///return await query.OrderBy(m => m.Date).ToListAsync();
+
+        // Nuevo filtro de búsqueda por equipo (local o visitante), ignorando mayúsculas
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            string term = searchTerm.Trim().ToLower();
+            query = query.Where(m => m.HomeTeam.Name.ToLower().Contains(term) ||
+                                     m.AwayTeam.Name.ToLower().Contains(term));
+        }
+
+        return await query.ToListAsync();
     }
 
     public async Task<Match?> GetByIdWithDetailsAsync(int id)

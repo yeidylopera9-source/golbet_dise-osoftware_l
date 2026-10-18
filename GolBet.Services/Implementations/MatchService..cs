@@ -26,7 +26,22 @@ public class MatchService : IMatchService
         return _mapper.Map<IEnumerable<MatchDto>>(matches);
     }
 
-    // GolBet.Services/Implementations/MatchService.cs  (agregar)
+    /// actualizamos
+    public async Task<IEnumerable<MatchDto>> GetAllWithTeamsAsync(MatchStatus? status = null, string? searchTerm = null)
+    {
+        var matches = await _matchRepository.GetAllWithTeamsAsync(status, searchTerm);
+
+        // Mapeo de entidad a DTO
+        return matches.Select(m => new MatchDto
+        {
+            Id = m.Id,
+            HomeTeamName = m.HomeTeam.Name,
+            AwayTeamName = m.AwayTeam.Name,
+            Date = m.Date,
+            Status = m.Status,
+        });
+    }
+
     public async Task<MatchDetailDto?> GetDetailAsync(int id)
     {
         var match = await _matchRepository.GetByIdWithDetailsAsync(id);
