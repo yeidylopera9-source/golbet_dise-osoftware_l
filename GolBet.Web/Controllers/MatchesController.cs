@@ -140,6 +140,7 @@ public class MatchesController : Controller
     }
 
     [Authorize(Roles = DbSeeder.AdminRole)]
+
     // POST /Matches/Deactivate/5
 
     [HttpPost, ValidateAntiForgeryToken]
